@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soglasso"
+version = "0.1.0"
+description = "Reference implementation of the Sparse Overlapping Group (SOG) Lasso from Rao, Nowak, Cox & Rogers (2014), arXiv:1402.4512"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.21",
+    "scikit-learn>=1.0",
+    "scipy>=1.7",
+]
+
+[project.optional-dependencies]
+tutorials = ["matplotlib>=3.4"]
+
+[tool.setuptools]
+packages = ["soglasso"]

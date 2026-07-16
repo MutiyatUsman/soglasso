@@ -69,13 +69,35 @@ print("recovery error:", np.linalg.norm(model.coef_ - x_star))
   SOGlasso's recovered support against plain Lasso and the (latent)
   Overlapping Group Lasso on a synthetic group-sparse problem.
 - **`notebooks/02_reproduce_figure6a.ipynb`** — reproduces the qualitative
-  result of **Figure 6(a)** / **Section 5.2** in the paper: held-out MSE of
-  Lasso, Glasso, OGlasso and SOGlasso as the within-group sparsity fraction
-  `alpha` is varied. SOGlasso tracks the best baseline across the full
-  range, since it is the only method modeling both levels of structure.
+  result of **Figure 6(a)** / **Section 5.2** using a single-task stand-in
+  for tractability. Useful for a quick sanity check, but see below.
+- **`notebooks/03_reproduce_figure6a_multitask.ipynb`** — reproduces
+  Figure 6(a) using the paper's **actual multitask construction from
+  Section 5.1**: T=20 tasks (matching the paper exactly) sharing the same
+  k active feature groups, with each task independently sparse *within*
+  those groups (the real fMRI motivation — same brain regions active
+  across subjects, different voxels per subject). This version's results
+  match the paper's specific claims about Figure 6(a) closely: Lasso
+  diverges sharply as α→1, SOGlasso converges toward OGlasso's performance
+  as α→1, and Glasso is dominated by both OGlasso and SOGlasso for α≥0.4.
+  Group/trial counts are reduced from the paper's M=100 groups / 100
+  trials for tractable runtime, but T=20 is kept exact since it's what
+  makes the shared-macrostructure/independent-microstructure story
+  meaningful in the first place.
 
-Both notebooks run end-to-end in a few minutes on a laptop and are also
-available as a standalone script: `tutorials/reproduce_figure6a.py`.
+All three notebooks run end-to-end in a few minutes on a laptop and are
+also available as standalone scripts under `tutorials/`.
+
+### A note on hyperparameter grids
+
+SOGlasso's penalty reduces exactly to the (latent) overlapping group lasso
+as µ→0 (Section 3: "if λ1=0... we are left with the latent group lasso").
+If a validation grid search for SOGlasso only searches large µ values, it
+will never discover this regime even when the data calls for it — so any
+grid search over µ should include values close to zero. We verified this
+numerically in `03_reproduce_figure6a_multitask.ipynb`: at α=1.0, held-out
+MSE dropped monotonically from ~7.5 (µ=0.7) to ~3.9 (µ=0.0), correctly
+recovering OGlasso-like behavior in the limit.
 
 ## Package structure
 
@@ -86,9 +108,10 @@ soglasso/
 │   ├── groups.py       # overlapping-group replication utilities (Sec 3.2)
 │   ├── model.py         # SOGLasso estimator (FISTA solver)
 │   ├── baselines.py    # Lasso / Glasso / OGlasso as special cases
-│   └── data.py          # synthetic (k,l)-group-sparse data generator (Sec 5.2)
+│   ├── data.py           # single-task synthetic data generator (simplified)
+│   └── multitask.py    # ACTUAL multitask construction (Section 5.1)
 ├── notebooks/            # tutorial notebooks (see above)
-├── tutorials/            # standalone reproduction script + outputs
+├── tutorials/            # standalone reproduction scripts + outputs
 └── tests/                 # unit tests (pytest)
 ```
 
@@ -100,11 +123,19 @@ reproduces:
 
 - The exact proximal operator of Section 3.2 / Eq. 16.
 - The covariate-duplication strategy for overlapping groups.
-- The qualitative comparison in Figure 6(a) (Section 5.2), on a single-task
-  version of the paper's synthetic experiment, with reduced trial count for
-  tractable runtime (10 trials here vs. 100 in the paper) and per-method
-  hyperparameters chosen by validation-set grid search rather than the
-  paper's oracle/"clairvoyant" tuning.
+- The paper's **actual multitask construction** (Section 5.1): T tasks
+  sharing the same active feature groups, each independently sparse within
+  those groups, reduced to the standard single-vector form via covariate
+  duplication over the stacked/aggregated coefficient vector.
+- The qualitative comparison in Figure 6(a) (Section 5.2), reproduced two
+  ways: a single-task stand-in (`02_...ipynb`) and the true multitask
+  construction with T=20 tasks matching the paper exactly
+  (`03_..._multitask.ipynb`) — the latter matches the paper's specific
+  claims about the figure (Lasso diverging at high α, SOGlasso converging
+  toward OGlasso as α→1, Glasso dominated by both) closely.
+- Group/trial counts are reduced from the paper's full M=100 groups / 100
+  trials for tractable runtime in both cases; see each notebook for exactly
+  what was changed and why.
 
 It does **not** attempt to reproduce the fMRI (star-plus dataset) or breast
 cancer gene-pathway experiments (Sections 5.1.1 / 5.3), since those require

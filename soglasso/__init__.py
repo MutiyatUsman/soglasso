@@ -6,6 +6,7 @@ from .groups import (
 )
 from .baselines import lasso, group_lasso, overlapping_group_lasso, sog_lasso
 from .data import make_sog_regression
+from .multitask import make_multitask_sog_regression, build_multitask_groups
 
 __all__ = [
     "SOGLasso",
@@ -17,4 +18,6 @@ __all__ = [
     "overlapping_group_lasso",
     "sog_lasso",
     "make_sog_regression",
+    "make_multitask_sog_regression",
+    "build_multitask_groups",
 ]
